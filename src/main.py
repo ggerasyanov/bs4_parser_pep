@@ -7,9 +7,9 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, MAIN_DOC_URL, MAIN_PEP_URL, EXPECTED_STATUS
+from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, MAIN_PEP_URL
 from outputs import control_output
-from utils import get_response, find_tag
+from utils import find_tag, get_response
 
 
 def whats_new(session):
@@ -31,7 +31,7 @@ def whats_new(session):
         version_link = urljoin(whats_new_url, href)
         response = get_response(session, version_link)
         if response is None:
-            continue  
+            continue
         soup = BeautifulSoup(response.text, 'lxml')
         h1 = find_tag(soup, 'h1')
         dl = find_tag(soup, 'dl')
@@ -41,6 +41,7 @@ def whats_new(session):
         )
 
     return result
+
 
 def latest_versions(session):
     response = get_response(session, MAIN_DOC_URL)
@@ -72,6 +73,7 @@ def latest_versions(session):
 
     return results
 
+
 def download(session):
     downloads_url = urljoin(MAIN_DOC_URL, 'download.html')
     response = get_response(session, downloads_url)
@@ -80,12 +82,14 @@ def download(session):
     soup = BeautifulSoup(response.text, 'lxml')
 
     table = find_tag(soup, 'table', attrs={'class': 'docutils'})
-    
-    pdf_a4_tag = find_tag(table, 'a', attrs={'href': re.compile(r'.+pdf-a4\.zip$')})
+
+    pdf_a4_tag = find_tag(table, 'a', attrs={
+        'href': re.compile(r'.+pdf-a4\.zip$')
+    })
     pdf_a4_link = pdf_a4_tag['href']
     archive_url = urljoin(downloads_url, pdf_a4_link)
 
-    filename = archive_url.split('/')[-1] 
+    filename = archive_url.split('/')[-1]
     downloads_dir = BASE_DIR / 'downloads'
     downloads_dir.mkdir(exist_ok=True)
     archive_path = downloads_dir / filename
@@ -96,12 +100,13 @@ def download(session):
         file.write(response.content)
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
+
 def pep(session):
     response = get_response(session, MAIN_PEP_URL)
     if response is None:
         return
     soup = BeautifulSoup(response.text, 'lxml')
-    table_pep = find_tag(soup,'section', {'id': 'numerical-index'})
+    table_pep = find_tag(soup, 'section', {'id': 'numerical-index'})
     pep_doc = find_tag(table_pep, 'tbody')
     lines_table = pep_doc.find_all('tr')
     result = [
@@ -125,18 +130,15 @@ def pep(session):
         columns = line.find_all('td')
         status = columns[0].text
         number_pep = find_tag(columns[1], 'a')
-        title = find_tag(columns[2], 'a').text
-        author = columns[3].text
-        # result.append(
-        #     (status, number_pep.text, title, author)
-        # )
 
         pep_page_url = urljoin(MAIN_PEP_URL, number_pep['href'])
         response = get_response(session, pep_page_url)
         if response is None:
             return
         soup = BeautifulSoup(response.text, 'lxml')
-        table_pep_page = find_tag(soup, 'dl', {'class': 'rfc2822 field-list simple'})
+        table_pep_page = find_tag(soup, 'dl', {
+            'class': 'rfc2822 field-list simple'
+        })
         dt_table = table_pep_page.find_all('dt')
         status_page = ''
         for item in dt_table:
@@ -145,7 +147,7 @@ def pep(session):
 
         if len(status) > 1:
             status = list(status)[1]
-        else: 
+        else:
             status = ''
         full_status = EXPECTED_STATUS[status]
 
@@ -156,11 +158,11 @@ def pep(session):
             Статус в карточке: {status_page}
             Ожидаемы статус: {full_status}
             """)
-        
+
         if status_page in count_status.keys():
             count_status[status_page] += 1
         total_count += 1
-    
+
     for status, count in count_status.items():
         result.append(
             (status, count)
@@ -173,12 +175,14 @@ def pep(session):
 
     return result
 
+
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,
     'latest-versions': latest_versions,
     'download': download,
     'pep': pep,
 }
+
 
 def main():
     configure_logging()
@@ -198,5 +202,6 @@ def main():
         control_output(results, args)
     logging.info('Парсер завершил работу.')
 
+
 if __name__ == '__main__':
-    main() 
+    main()
