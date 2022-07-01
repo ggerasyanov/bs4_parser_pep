@@ -101,6 +101,18 @@ def download(session):
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
+def collecion_data(count_status, total_count, result):
+    for status, count in count_status.items():
+        result.append(
+            (status, count)
+        )
+
+    result.append(
+        ('Total', total_count)
+    )
+    return result
+
+
 def pep(session):
     response = get_response(session, MAIN_PEP_URL)
     if response is None:
@@ -163,17 +175,10 @@ def pep(session):
             count_status[status_page] += 1
         total_count += 1
 
-    for status, count in count_status.items():
-        result.append(
-            (status, count)
-        )
-    result.append(
-        ('Total', total_count)
-    )
     for i in logs:
         logging.info(i)
 
-    return result
+    return collecion_data(count_status, total_count, result)
 
 
 MODE_TO_FUNCTION = {
