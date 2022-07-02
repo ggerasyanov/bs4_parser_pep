@@ -9,10 +9,8 @@ from constants import BASE_DIR, DATETIME_FORMAT
 
 def control_output(results, cli_args):
     output = cli_args.output
-    if output == 'pretty':
-        pretty_output(results)
-    elif output == 'file':
-        file_output(results, cli_args)
+    if output in operating_modes.keys():
+        operating_modes[output](results, cli_args)
     else:
         default_output(results)
 
@@ -22,7 +20,7 @@ def default_output(results):
         print(*row)
 
 
-def pretty_output(results):
+def pretty_output(results, cli_args):
     table = PrettyTable()
     table.field_names = results[0]
     table.align = 'l'
@@ -45,3 +43,9 @@ def file_output(results, cli_args):
         write = csv.writer(f, dialect='unix')
         write.writerows(results)
     logging.info(f'Файл с резултатами был сохранён: {file_path}')
+
+
+operating_modes = {
+    'pretty': pretty_output,
+    'file': file_output,
+}
