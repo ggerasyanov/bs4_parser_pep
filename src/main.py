@@ -16,8 +16,6 @@ from utils import find_tag, get_response
 
 def whats_new(session):
     response = get_response(session, WHATS_NEW_URL)
-    if response is None:
-        return
     soup = BeautifulSoup(response.text, 'lxml')
 
     main_div = find_tag(soup, 'section', attrs={'id': 'what-s-new-in-python'})
@@ -31,8 +29,6 @@ def whats_new(session):
         href = version_a_tag['href']
         version_link = urljoin(WHATS_NEW_URL, href)
         response = get_response(session, version_link)
-        if response is None:
-            continue
         soup = BeautifulSoup(response.text, 'lxml')
         h1 = find_tag(soup, 'h1')
         dl = find_tag(soup, 'dl')
@@ -46,8 +42,6 @@ def whats_new(session):
 
 def latest_versions(session):
     response = get_response(session, MAIN_DOC_URL)
-    if response is None:
-        return
     soup = BeautifulSoup(response.text, 'lxml')
 
     sidebar = find_tag(soup, 'div', attrs={'class': 'sphinxsidebarwrapper'})
@@ -77,8 +71,6 @@ def latest_versions(session):
 
 def download(session):
     response = get_response(session, DOWNLOADS_URL)
-    if response is None:
-        return
     soup = BeautifulSoup(response.text, 'lxml')
 
     table = find_tag(soup, 'table', attrs={'class': 'docutils'})
@@ -103,6 +95,7 @@ def download(session):
 
 def collecion_data(count_status, total_count, result):
     for status, count in count_status.items():
+        # если использовать extend ломается prettytable
         result.append(
             (status, count)
         )
@@ -115,8 +108,6 @@ def collecion_data(count_status, total_count, result):
 
 def pep(session):
     response = get_response(session, MAIN_PEP_URL)
-    if response is None:
-        return
     soup = BeautifulSoup(response.text, 'lxml')
     table_pep = find_tag(soup, 'section', {'id': 'numerical-index'})
     pep_doc = find_tag(table_pep, 'tbody')
@@ -135,8 +126,6 @@ def pep(session):
 
         pep_page_url = urljoin(MAIN_PEP_URL, number_pep['href'])
         response = get_response(session, pep_page_url)
-        if response is None:
-            return
         soup = BeautifulSoup(response.text, 'lxml')
         table_pep_page = find_tag(soup, 'dl', {
             'class': 'rfc2822 field-list simple'
