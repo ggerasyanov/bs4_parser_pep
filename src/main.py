@@ -7,14 +7,14 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, EXPECTED_STATUS, MAIN_DOC_URL, MAIN_PEP_URL
+from constants import (BASE_DIR, DOWNLOADS_URL, EXPECTED_STATUS, MAIN_DOC_URL,
+                       MAIN_PEP_URL, WHATS_NEW_URL)
 from outputs import control_output
 from utils import find_tag, get_response
 
 
 def whats_new(session):
-    whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
-    response = get_response(session, whats_new_url)
+    response = get_response(session, WHATS_NEW_URL)
     if response is None:
         return
     soup = BeautifulSoup(response.text, 'lxml')
@@ -28,7 +28,7 @@ def whats_new(session):
     for section in tqdm(sections_by_python):
         version_a_tag = find_tag(section, 'a')
         href = version_a_tag['href']
-        version_link = urljoin(whats_new_url, href)
+        version_link = urljoin(WHATS_NEW_URL, href)
         response = get_response(session, version_link)
         if response is None:
             continue
@@ -75,8 +75,7 @@ def latest_versions(session):
 
 
 def download(session):
-    downloads_url = urljoin(MAIN_DOC_URL, 'download.html')
-    response = get_response(session, downloads_url)
+    response = get_response(session, DOWNLOADS_URL)
     if response is None:
         return
     soup = BeautifulSoup(response.text, 'lxml')
@@ -87,7 +86,7 @@ def download(session):
         'href': re.compile(r'.+pdf-a4\.zip$')
     })
     pdf_a4_link = pdf_a4_tag['href']
-    archive_url = urljoin(downloads_url, pdf_a4_link)
+    archive_url = urljoin(DOWNLOADS_URL, pdf_a4_link)
 
     filename = archive_url.split('/')[-1]
     downloads_dir = BASE_DIR / 'downloads'
