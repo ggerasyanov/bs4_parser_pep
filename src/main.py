@@ -1,6 +1,7 @@
 import logging
 import re
 from urllib.parse import urljoin
+from collections import defaultdict
 
 import requests_cache
 from bs4 import BeautifulSoup
@@ -124,19 +125,9 @@ def pep(session):
         ('Статус', 'Количество')
     ]
     logs = []
-    count_status = {
-        'Active': 0,
-        'Accepted': 0,
-        'Deferred': 0,
-        'Final': 0,
-        'Provisional': 0,
-        'Rejected': 0,
-        'Superseded': 0,
-        'Withdrawn': 0,
-        'Active': 0,
-        'Draft': 0,
-    }
+    count_status = defaultdict(int)
     total_count = 0
+
     for line in tqdm(lines_table):
         columns = line.find_all('td')
         status = columns[0].text
@@ -170,8 +161,8 @@ def pep(session):
             Ожидаемы статус: {full_status}
             """)
 
-        if status_page in count_status.keys():
-            count_status[status_page] += 1
+        # if status_page in count_status.keys():
+        count_status[status_page] += 1
         total_count += 1
 
     for i in logs:
